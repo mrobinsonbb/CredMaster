@@ -174,7 +174,6 @@ class FireproxProvider(ProxyProvider):
 			yield api
 
 	def create_api(self, region, url):
-		print(region)
 		args, help_str = self.get_fireprox_args("create", region, url=url)
 		fp = FireProx(args, help_str)
 		resource_id, proxy_url = fp.create_api(url)
