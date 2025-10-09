@@ -1,9 +1,8 @@
-import json, requests
+import json
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
-def okta_authenticate(url, username, password, useragent, pluginargs):
+def okta_authenticate(api, username, password, useragent, pluginargs):
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -14,23 +13,15 @@ def okta_authenticate(url, username, password, useragent, pluginargs):
 
     raw_body = "{\"username\":\"%s\",\"password\":\"%s\",\"options\":{\"warnBeforePasswordExpired\":true,\"multiOptionalFactorEnroll\":true}}" % (username, password)
 
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
     headers = {
             'User-Agent' : useragent,
-            "X-My-X-Forwarded-For" : spoofed_ip,
-            "x-amzn-apigateway-api-id" : amazon_id,
-            "X-My-X-Amzn-Trace-Id" : trace_id,
-
             'Content-Type' : 'application/json'
     }
 
     headers = utils.add_custom_headers(pluginargs, headers)
 
     try:
-        resp = requests.post(f"{url}/api/v1/authn/",data=raw_body,headers=headers)
+        resp = api.post("/api/v1/authn/",data=raw_body,headers=headers)
 
         if resp.status_code == 200:
             resp_json = json.loads(resp.text)

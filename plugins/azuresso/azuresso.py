@@ -1,6 +1,5 @@
-import requests, uuid, re
+import uuid, re
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def extract_error(xmlresponse):
@@ -8,7 +7,7 @@ def extract_error(xmlresponse):
   return code.group(1).split(":")[0].strip()
 
 
-def azuresso_authenticate(url, username, password, useragent, pluginargs):
+def azuresso_authenticate(api, username, password, useragent, pluginargs):
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -65,15 +64,8 @@ def azuresso_authenticate(url, username, password, useragent, pluginargs):
     tempdata = tempdata.replace("UsernamePlaceholder", username)
     tempdata = tempdata.replace("PasswordPlaceholder", password)
 
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
     headers = {
         'User-Agent' : useragent,
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
 
         'client-request-id' : requestid,
         'return-client-request-id' : 'true',
@@ -83,7 +75,7 @@ def azuresso_authenticate(url, username, password, useragent, pluginargs):
     headers = utils.add_custom_headers(pluginargs, headers)
 
     try:
-        r = requests.post(f"{url}/{pluginargs['domain']}/winauth/trust/2005/usernamemixed?client-request-id={requestid}", data=tempdata, headers=headers, verify=False, timeout=30)
+        r = api.post(f"/{pluginargs['domain']}/winauth/trust/2005/usernamemixed?client-request-id={requestid}", data=tempdata, headers=headers, verify=False, timeout=30)
 
         xmlresponse = str(r.content)
         creds = username + ":" + password

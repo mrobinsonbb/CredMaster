@@ -1,9 +1,7 @@
-import requests
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
-def fortinetvpn_authenticate(url, username, password, useragent, pluginargs):
+def fortinetvpn_authenticate(api, username, password, useragent, pluginargs):
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -11,17 +9,10 @@ def fortinetvpn_authenticate(url, username, password, useragent, pluginargs):
         'output' : "",
         'valid_user' : False
     }
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
 
     # CHANGEME: Add more if necessary
     headers = {
         'User-Agent' : useragent,
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
-
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
@@ -39,7 +30,7 @@ def fortinetvpn_authenticate(url, username, password, useragent, pluginargs):
 
     try:
 
-        resp = requests.post("{}/remote/logincheck".format(url),data=post_params,headers=headers)
+        resp = api.post("/remote/logincheck", data=post_params, headers=headers)
 
         if resp.status_code == 200 and 'redir=' in resp.text and '&portal=' in resp.text:
             data_response['result'] = "success"

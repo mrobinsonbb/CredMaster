@@ -1,6 +1,4 @@
-import requests
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def validate(pluginargs, args):
@@ -18,7 +16,7 @@ def validate(pluginargs, args):
         return False, error, None
 
 
-def testconnect(pluginargs, args, api_dict, useragent):
+def testconnect(pluginargs, args, api, useragent):
 
     success = True
     headers = {
@@ -30,7 +28,7 @@ def testconnect(pluginargs, args, api_dict, useragent):
 
     headers = utils.add_custom_headers(pluginargs, headers)
 
-    resp = requests.get(api_dict['proxy_url'], headers=headers)
+    resp = api.get(headers=headers)
 
     if resp.status_code == 504:
         output = "Testconnect: Connection failed, endpoint timed out, exiting"

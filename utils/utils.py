@@ -38,17 +38,14 @@ def add_custom_headers(pluginargs, headers):
     return headers
 
 
-def get_owa_domain(url, uri, useragent):
+def get_owa_domain(api, uri, useragent):
     # Stolen from https://github.com/byt3bl33d3r/SprayingToolkit who stole it from https://github.com/dafthack/MailSniper
     auth_header = {
         "Authorization": "NTLM TlRMTVNTUAABAAAAB4IIogAAAAAAAAAAAAAAAAAAAAAGAbEdAAAADw==",
         'User-Agent': useragent,
-        "X-My-X-Forwarded-For" : generate_ip(),
-        "x-amzn-apigateway-api-id" : generate_id(),
-        "X-My-X-Amzn-Trace-Id" : generate_trace_id(),
     }
 
-    r = requests.post("{url}{uri}".format(url=url,uri=uri), headers=auth_header, verify=False)
+    r = api.post(uri, headers=auth_header, verify=False)
     if r.status_code == 401:
         ntlm_info = ntlmdecode(r.headers["x-amzn-Remapped-WWW-Authenticate"])
         return ntlm_info["NetBIOS_Domain_Name"]

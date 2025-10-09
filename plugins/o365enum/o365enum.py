@@ -1,9 +1,7 @@
-import requests
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
-def o365enum_authenticate(url, username, password, useragent, pluginargs):
+def o365enum_authenticate(api, username, password, useragent, pluginargs):
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -12,16 +10,8 @@ def o365enum_authenticate(url, username, password, useragent, pluginargs):
         'valid_user' : False
     }
 
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
-
     headers = {
         'User-Agent' : useragent,
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
     }
 
     headers = utils.add_custom_headers(pluginargs, headers)
@@ -52,9 +42,7 @@ def o365enum_authenticate(url, username, password, useragent, pluginargs):
 
         body = '{"Username":"%s"}' % username
 
-        sess = requests.session()
-
-        response = sess.post(f"{url}/common/GetCredentialType", headers=headers, data=body)
+        response = api.post("/common/GetCredentialType", headers=headers, data=body)
 
         throttle_status = int(response.json()['ThrottleStatus'])
         if_exists_result = str(response.json()['IfExistsResult'])

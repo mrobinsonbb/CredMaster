@@ -1,9 +1,7 @@
-import requests
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
-def template_authenticate(url, username, password, useragent, pluginargs): # CHANGEME: replace template with plugin name
+def template_authenticate(api, username, password, useragent, pluginargs): # CHANGEME: replace template with plugin name
 
     # not all of these are used, provided for future dev if needed
     # Only ones necessary to return at the moment are:
@@ -18,23 +16,16 @@ def template_authenticate(url, username, password, useragent, pluginargs): # CHA
         'valid_user' : False
     }
 
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
     # CHANGEME: Add more if necessary
     headers = {
         'User-Agent' : useragent,
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
     }
 
     headers = utils.add_custom_headers(pluginargs, headers)
 
     try:
 
-        resp = requests.post(f"{url}/uri",headers=headers)
+        resp = api.post("/uri",headers=headers)
 
         if Success:
             data_response['result'] = "success"

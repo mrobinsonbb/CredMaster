@@ -1,6 +1,5 @@
-import requests, random
+import random
 import utils.utils as utils
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def extract_error(desc): # TODO: make sure this is correct for your attack
@@ -8,7 +7,7 @@ def extract_error(desc): # TODO: make sure this is correct for your attack
     return desc.split(":")[0].strip()
 
 
-def template_authenticate(url, username, password, useragent, pluginargs): # TODO: change this to pluginname_authenticate
+def template_authenticate(api, username, password, useragent, pluginargs): # TODO: change this to pluginname_authenticate
 
     data_response = {
         'result' : None,    # Can be "success", "failure" or "potential"
@@ -38,16 +37,8 @@ def template_authenticate(url, username, password, useragent, pluginargs): # TOD
         'scope' : 'openid',
     }
 
-    spoofed_ip = utils.generate_ip()
-    amazon_id = utils.generate_id()
-    trace_id = utils.generate_trace_id()
-
     headers = {
-        "X-My-X-Forwarded-For" : spoofed_ip,
-        "x-amzn-apigateway-api-id" : amazon_id,
-        "X-My-X-Amzn-Trace-Id" : trace_id,
         "User-Agent" : useragent,
-
         'Accept' : 'application/json',
         'Content-Type' : 'application/x-www-form-urlencoded'
     }
@@ -57,7 +48,7 @@ def template_authenticate(url, username, password, useragent, pluginargs): # TOD
 
     # TODO: change this as needed for your attack
     try:
-        resp = requests.post(f"{url}/common/oauth2/token", headers=headers, data=body)
+        resp = api.post("/common/oauth2/token", headers=headers, data=body)
 
         if resp.status_code == 200:
             data_response['result'] = "success"
