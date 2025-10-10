@@ -1,8 +1,8 @@
 # CredMaster #
 
-Launch a password spray / brute force attach via Amazon AWS passthrough proxies, shifting the requesting IP address for every authentication attempt. This dynamically creates FireProx APIs for more evasive password sprays.  
+Launch a password spray / brute force attach via proxies (AWS, Cloudflare, Azure, GCP, Alibaba), shifting the requesting IP address for every authentication attempt. This dynamically creates FireProx or OmniProx APIs for more evasive password sprays.  
 
-Shoutout to [@ustayready](https://twitter.com/ustayready) for his [CredKing](https://github.com/ustayready/CredKing) and [FireProx](https://github.com/ustayready/fireprox) tools, which form the base of this suite.
+Shoutout to [@ustayready](https://twitter.com/ustayready) for his [CredKing](https://github.com/ustayready/CredKing), [FireProx](https://github.com/ustayready/fireprox) tools, which form the base of this suite; and [@ZephrFish](https://twitter.com/ZephrFish) for [OmniProx](https://github.com/ZephrFish/OmniProx.git).
 
 See all the full notes on the [Wiki](https://github.com/knavesec/CredMaster/wiki), tool released with specifics in this [blogpost](https://whynotsecurity.com/blog/credmaster/)
 
@@ -80,7 +80,7 @@ or
 python3 credmaster.py --config config.json
 ```
 
-This tool requires AWS API access keys, a walkthrough on how to acquire these keys can be found here: https://bond-o.medium.com/aws-pass-through-proxy-84f1f7fa4b4b
+This tool requires API access keys, for your proxy provider. A walkthrough on how to acquire AWS keys can be found here: https://bond-o.medium.com/aws-pass-through-proxy-84f1f7fa4b4b
 
 All other usage details can be found [on the wiki](https://github.com/knavesec/CredMaster/wiki/Usage)
 
