@@ -37,5 +37,26 @@
   "access_key" : null,
   "secret_access_key" : null,
   "session_token" : null,
-  "profile_name" : null
+  "profile_name" : null,
+
+  "api_token": null,
+  "account_id": null,
+  "zone_id": null,
+
+  "access_key_id": null,
+  "access_key_secret": null,
+  "region_id": null,
+
+  "subscription_id": null,
+  "tenant_id": null,
+  "client_id": null,
+  "client_secret": null,
+  "location": null,
+  "resource_group": null,
+  "use_cli": null,
+  "container_pool": null,
+
+  "project_id": null,
+  "credentials_path": null
+
 }
