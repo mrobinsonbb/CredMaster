@@ -1,6 +1,7 @@
 {
   "plugin" : null,
   "proxy": null,
+  "provider": null,
   "userfile" : null,
   "passwordfile" : null,
   "userpassfile" : null,
