@@ -1,4 +1,6 @@
 import utils.utils as utils
+import gzip
+import zlib
 
 
 def o365enum_authenticate(api, username, password, useragent, pluginargs):
@@ -40,10 +42,11 @@ def o365enum_authenticate(api, username, password, useragent, pluginargs):
             "5" : "CLOUD_FEDERATED"
         }
 
-        body = '{"Username":"%s"}' % username
+        body = '{"username":"%s"}' % username
 
         response = api.post("/common/GetCredentialType", headers=headers, data=body)
 
+        #print(f"{response.headers}")
         throttle_status = int(response.json()['ThrottleStatus'])
         if_exists_result = str(response.json()['IfExistsResult'])
         if_exists_result_response = if_exists_result_codes[if_exists_result]
@@ -57,6 +60,7 @@ def o365enum_authenticate(api, username, password, useragent, pluginargs):
         elif throttle_status != 0 or if_exists_result_response == "THROTTLE":
             data_response['output'] = f"[?] WARNING: Throttle detected on user {username}"
             data_response['result'] = "failure"
+            data_response['error'] = True
 
         else:
             sign = "[-]"
@@ -70,6 +74,17 @@ def o365enum_authenticate(api, username, password, useragent, pluginargs):
     except Exception as ex:
         data_response['error'] = True
         data_response['output'] = ex
+        data_response['debug'] = response.text
+        #data_response['debug1'] = ""
+        #data_response['debug2'] = response.text
+        #if "Content-Encoding" in response.headers:
+        #    data_response['debug1'] = response.headers["Content-Encoding"]
+        #    if response.headers["Content-Encoding"] == "gzip":
+        #        try:
+        #            t = gzip.decompress(response.text.encode("latin1"))
+        #        except:
+        #            t = "unable to ungzip"
+        #        data_response['debug2'] = t
         pass
 
     return data_response

@@ -13,7 +13,7 @@ class Logger:
 		self.lock_success = threading.Lock()
 		# input exception handling
 		if self.outfile != None:
-			of = self.outfile + "-credmaster.txt"
+			of = self.outfile
 			if os.path.exists(of):
 				self.log_entry(f"File {of} already exists, try again with a unique file name")
 				sys.exit()
@@ -23,11 +23,11 @@ class Logger:
 
 		self.lock.acquire()
 
-		ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+		ts = datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 		print(f"[{ts}] {entry}")
 
 		if self.outfile is not None:
-			with open(self.outfile + "-credmaster.txt", 'a+', encoding='utf-8') as file:
+			with open(self.outfile, 'a+', encoding='utf-8') as file:
 				file.write(f"[{ts}] {entry}")
 				file.write("\n")
 				file.close()
@@ -129,7 +129,7 @@ class CredMaster(object):
 		self.jitter = args.jitter or config_dict.get("jitter")
 		self.jitter_min = args.jitter_min or config_dict.get("jitter_min")
 		self.delay = args.delay or config_dict.get("delay")
-		
+
 		self.batch_size = args.batch_size or config_dict.get("batch_size")
 		self.batch_delay = args.batch_delay or config_dict.get("batch_delay")
 		if self.batch_size != None and self.batch_delay == None:
@@ -230,13 +230,13 @@ class CredMaster(object):
 			key = self.pargs[i].replace("--","")
 			pluginargs[key] = self.pargs[i+1]
 
-		## 
+		##
 		## If any plugins require a special argument, set it here
 		##	  Ex: Okta plugin requires the threadcount value for some checking, set it manually
 		##
 		pluginargs['thread_count'] = self.thread_count
 
-		self.start_time = datetime.datetime.utcnow()
+		self.start_time = datetime.datetime.now(datetime.UTC)
 		self.logger.log_entry(f"Execution started at: {self.start_time}")
 
 		# Check with plugin to make sure it has the data that it needs
@@ -272,8 +272,8 @@ class CredMaster(object):
 
 		if self.xforwardedfor is not None:
 			self.logger.log_entry(f"Setting static X-Forwarded-For header to: \"{self.xforwardedfor}\"")
-			pluginargs["xforwardedfor"] = self.xforwardedfor 
-			
+			pluginargs["xforwardedfor"] = self.xforwardedfor
+
 		# this is the original URL, NOT the fireproxy one. Don't use this in your sprays!
 		url = pluginargs["url"]
 
@@ -328,7 +328,7 @@ class CredMaster(object):
 
 					self.weekdaywarrior = int(self.weekdaywarrior)
 					sleep_time = self.ww_calc_next_spray_delay(self.weekdaywarrior)
-					next_time = datetime.datetime.utcnow() + datetime.timedelta(hours=self.weekdaywarrior) + datetime.timedelta(minutes=sleep_time)
+					next_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=self.weekdaywarrior) + datetime.timedelta(minutes=sleep_time)
 					self.logger.log_entry(f"Weekday Warrior: sleeping {sleep_time} minutes until {next_time.strftime('%H:%M')} on {spray_days[next_time.weekday()]} in UTC {self.weekdaywarrior}")
 					time.sleep(sleep_time*60)
 
@@ -348,19 +348,19 @@ class CredMaster(object):
 
 				if self.delay is None or len(passwords) == 1 or password == passwords[len(passwords)-1]:
 					if self.userpassfile != None:
-						self.logger.log_entry(f"Completed spray with user-pass file {self.userpassfile} at {datetime.datetime.utcnow()}")
+						self.logger.log_entry(f"Completed spray with user-pass file {self.userpassfile} at {datetime.datetime.now(datetime.UTC)}")
 					elif self.userenum:
-						self.logger.log_entry(f"Completed userenum at {datetime.datetime.utcnow()}")
+						self.logger.log_entry(f"Completed userenum at {datetime.datetime.now(datetime.UTC)}")
 					else:
-						self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.utcnow()}")
+						self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.now(datetime.UTC)}")
 
 					notify.notify_update(f"Info: Spray complete.", self.notify_obj)
 					continue
 				elif count != self.passwordsperdelay:
-					self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.utcnow()}, moving on to next password...")
+					self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.now(datetime.UTC)}, moving on to next password...")
 					continue
 				else:
-					self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.utcnow()}, sleeping for {self.delay} minutes before next password spray")
+					self.logger.log_entry(f"Completed spray with password {password} at {datetime.datetime.now(datetime.UTC)}, sleeping for {self.delay} minutes before next password spray")
 					self.logger.log_entry(f"Valid credentials discovered: {len(self.results)}")
 					for success in self.results:
 						self.logger.log_entry(f"Valid: {success['username']}:{success['password']}")
@@ -382,7 +382,7 @@ class CredMaster(object):
 				self.logger.log_entry("Second KeyboardInterrupt detected, unable to clean up APIs :( try the --clean option")
 
 		# Capture duration
-		self.end_time = datetime.datetime.utcnow()
+		self.end_time = datetime.datetime.now(datetime.UTC)
 		self.time_lapse = (self.end_time-self.start_time).total_seconds()
 
 		# Print stats
@@ -419,7 +419,8 @@ class CredMaster(object):
 	def spray_thread(self, api, pluginargs):
 
 		try:
-			plugin_authentiate = getattr(importlib.import_module(f"plugins.{self.plugin}.{self.plugin}"), f"{self.plugin}_authenticate")
+			self.logger.log_entry(f"plugin_authenticate: {self.plugin}")
+			plugin_authenticate = getattr(importlib.import_module(f"plugins.{self.plugin}.{self.plugin}"), f"{self.plugin}_authenticate")
 		except Exception as ex:
 			self.logger.log_entry("Error: Failed to import plugin with exception")
 			self.logger.log_entry(f"Error: {ex}")
@@ -439,18 +440,23 @@ class CredMaster(object):
 
 				count += 1
 
-				if self.jitter is not None:
-					if self.jitter_min is None:
-						self.jitter_min = 0
-					time.sleep(random.randint(self.jitter_min,self.jitter))
+				while True:
+					if self.jitter is not None:
+						if self.jitter_min is None:
+							self.jitter_min = 0
+						time.sleep(random.randint(self.jitter_min,self.jitter))
 
-				response = plugin_authentiate(api, cred["username"], cred["password"], cred["useragent"], pluginargs)
+					response = plugin_authenticate(api, cred["username"], cred["password"], cred["useragent"], pluginargs)
 
-				# if "debug" in response.keys():
-				#	  print(response["debug"])
+					# if "debug" in response.keys():
+					#	  print(response["debug"])
 
-				if response["error"]:
-					self.logger.log_entry(f"ERROR: {api.api_key}: {cred['username']} - {response['output']}")
+					if not response["error"]:
+						break
+					if response["error"]:
+						#self.logger.log_entry(f"ERROR in spray_thread: {api.api_key}: {cred['username']} - {response['output']} - {response['debug']}")
+						continue
+
 
 				if response["result"].lower() == "success" and ("userenum" not in pluginargs):
 					self.results.append( {"username" : cred["username"], "password" : cred["password"]} )
@@ -538,7 +544,7 @@ class CredMaster(object):
 
 		spray_times = [8,12,14] # launch sprays at 7AM, 11AM and 3PM
 
-		now = datetime.datetime.utcnow() + datetime.timedelta(hours=offset)
+		now = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=offset)
 		hour_cur = int(now.strftime("%H"))
 		minutes_cur = int(now.strftime("%M"))
 		day_cur = int(now.weekday())
@@ -598,8 +604,8 @@ if __name__ == '__main__':
 	adv_args = parser.add_argument_group(title='Advanced Inputs')
 	adv_args.add_argument('-o', '--outfile', default=None, required=False, help='Output file to write contents (omit extension)')
 	adv_args.add_argument('-t', '--threads', type=int, default=None, help='Thread count (default 1, max 15)')
-	adv_args.add_argument('-j', '--jitter', type=int, default=None, required=False, help='Jitter delay between requests in seconds (applies per-thread)')
-	adv_args.add_argument('-m', '--jitter_min', type=int, default=None, required=False, help='Minimum jitter time in seconds, defaults to 0')
+	adv_args.add_argument('-j', '--jitter', type=int, default=3, required=False, help='Jitter delay between requests in seconds (applies per-thread)')
+	adv_args.add_argument('-m', '--jitter_min', type=int, default=1, required=False, help='Minimum jitter time in seconds, defaults to 0')
 	adv_args.add_argument('-d', '--delay', type=int, default=None, required=False, help='Delay between unique passwords, in minutes')
 	adv_args.add_argument('--passwordsperdelay', type=int, default=None, required=False, help='Number of passwords to be tested per delay cycle')
 	adv_args.add_argument('--batch_size', type=int, default=None, required=False, help='Number of request to perform per thread')

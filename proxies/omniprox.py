@@ -30,8 +30,8 @@ class CloudflareProvider(CloudflareProviderBase):
 	""" Wrapper around CloudflareProvider from OmniProx to match interface """
 	def __init__(self, config_dict, args):
 		super().__init__(args)
-		self.api_token = config_dict.get('api_token', '')
-		self.account_id = config_dict.get('account_id', '')
+		self.api_token = args.token or config_dict.get('api_token', '')
+		self.account_id = args.account or config_dict.get('account_id', '')
 		self.zone_id = config_dict.get('zone_id', '')
 		self.proxies = []
 
@@ -129,13 +129,17 @@ class OMNIProxyProvider(ProxyProvider):
 
 		parser = argparse.ArgumentParser(add_help=False)
 		parser.add_argument('--provider', '-p',
-		           choices=['gcp', 'azure', 'az', 'cloudflare', 'cf', 'alibaba'],
-		           help='Cloud provider')
+				   choices=['gcp', 'azure', 'az', 'cloudflare', 'cf', 'alibaba'],
+				   help='Cloud provider')
+		parser.add_argument('--token', type=str, default=None, help="Cloudflare API token")
+		parser.add_argument('--account', type=str, default=None, help="Cloudflare API Account ID")
 
 		args, extra_args = parser.parse_known_args(args)
 
 		self.provider = args.provider or config_dict.get("provider")
 		self.config_dict = config_dict
+		self.account = args.account
+		self.token = args.token
 
 		return extra_args
 
@@ -144,6 +148,8 @@ class OMNIProxyProvider(ProxyProvider):
 		args = Args()
 		args.url = url
 		args.number = number
+		args.account = self.account
+		args.token = self.token
 		provider = provider_class(self.config_dict, args)
 		provider.create()
 		yield from provider.proxies
@@ -156,6 +162,8 @@ class OMNIProxyProvider(ProxyProvider):
 		provider_class = providers[self.provider]
 		args = Args()
 		args.api_id = api.api_key
+		args.account = self.account
+		args.token = self.token
 		provider = provider_class(self.config_dict, args)
 		provider.delete()
 
@@ -163,5 +171,5 @@ class OMNIProxyProvider(ProxyProvider):
 		if not self.provider:
 			self.logger.log_entry("Provider is required")
 			sys.exit()
-		
+
 
